@@ -1,0 +1,36 @@
+server:
+  port: 8888
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: mcp
+  main:
+    web-application-type: NONE
+#  原代码以 cmdrunner启动，无需web容器，设置的是 none；尝试改为 http触发的形式
+#  web-application-type: REACTIVE
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+#       需要一个能支持 funcation call的模型， deepseek-r1不支持，qwen2.5:1.5b支持
+        model: qwen2.5:1.5b
+    mcp:
+      client:
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8080
+  mandatory-file-encoding: UTF-8
+
+# 调试日志
+logging:
+  level:
+    io:
+      modelcontextprotocol:
+        client: DEBUG
+        spec: DEBUG

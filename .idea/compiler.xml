@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="ollama-chat" />
+        <module name="mcp-webflux-client-exmaple" />
+        <module name="mcp-starter-webflux-server" />
+        <module name="spring-ai-alibaba-prompt-example" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ai-mcp-fileserver" target="17" />
+      <module name="ai-mcp-github" target="17" />
+      <module name="ai-mdp-sqlite" target="17" />
+      <module name="ai-mdp-sqlite-chatbot" target="17" />
+      <module name="mcp-stdio-client-exmaple" target="1.5" />
+      <module name="mcp-stdio-server-exmaple" target="1.5" />
+      <module name="mcp-stremable-client-exmaple" target="1.5" />
+      <module name="spring-ai-alibaba-manul-mcp-example" target="1.5" />
+      <module name="starter-stock-server" target="1.5" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ai-mcp-fileserver" options="-parameters" />
+      <module name="ai-mcp-github" options="-parameters" />
+      <module name="ai-mdp-sqlite" options="-parameters" />
+      <module name="ai-mdp-sqlite-chatbot" options="-parameters" />
+      <module name="mcp-starter-webflux-server" options="-parameters" />
+      <module name="mcp-webflux-client-exmaple" options="-parameters" />
+      <module name="ollama-chat" options="-parameters" />
+      <module name="spring-ai-alibaba-chat-example" options="-parameters" />
+      <module name="spring-ai-alibaba-mcp-example" options="-parameters" />
+      <module name="spring-ai-alibaba-mcp-starter-example" options="-parameters" />
+      <module name="spring-ai-alibaba-prompt-example" options="-parameters" />
+    </option>
+  </component>
+</project>

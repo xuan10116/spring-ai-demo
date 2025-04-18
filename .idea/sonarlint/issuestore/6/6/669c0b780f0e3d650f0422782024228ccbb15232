@@ -1,0 +1,13 @@
+
+{
+java:S1488ƒ"_Immediately return this expression instead of assigning it to the temporary variable "aqiInfo".(İŒÇòøÿÿÿÿ
+`
+java:S2259“"IA "NullPointerException" could be thrown; "weatherData" is nullable here.(¬·Ç™
+e
+java:S2259 "IA "NullPointerException" could be thrown; "weatherData" is nullable here.(ßÒ‚¡úÿÿÿÿ
+E
+java:S2140ö")Use "java.util.Random.nextInt()" instead.(ÈÖÁØüÿÿÿÿ
+O	java:S106Ç"9Replace this use of System.out or System.err by a logger.(¶ÚÔ
+T	java:S106È"9Replace this use of System.out or System.err by a logger.(à§„Âÿÿÿÿÿ
+O	java:S106Ë"9Replace this use of System.out or System.err by a logger.(Á›¿º
+T	java:S106Ì"9Replace this use of System.out or System.err by a logger.(¤ªş¡ÿÿÿÿÿ
