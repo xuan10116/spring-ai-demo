@@ -1,23 +1,10 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.alibaba.cloud.ai.example.chat.ollama.controller;
 
+import com.alibaba.cloud.ai.example.chat.ollama.config.OllamaChatProperties;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.http.MediaType;
 import reactor.core.publisher.Flux;
 
 import org.springframework.ai.chat.model.ChatModel;
@@ -28,21 +15,32 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * @author yuluo
- * @author <a href="mailto:yuluo08290126@gmail.com">yuluo</a>
- */
+import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
+import static com.alibaba.cloud.ai.example.chat.ollama.controller.OllamaChatClientController.DEFAULT_PROMPT;
+
+ // ============ Spring AI ChatModel 使用模式说明 ============ //
+ /**
+ * 1. 构建方式：通过构造函数注入 ChatModel 实例。
+ * 2. 提示词构造：支持直接传入字符串或使用 Builder 构建包含 system/user/assistant 角色的复杂 prompt。
+ * 3. 调用方式：同步 call() 或异步 stream()。
+ * 4. 参数设置：可通过 Prompt 构造器注入自定义 OllamaOptions。
+ * 5. 输出处理：返回 ChatResponse 对象，可提取文本内容或结构化数据。
+ */
 @RestController
 @RequestMapping("/model")
 public class OllamaChatModelController {
 
-    private static final String DEFAULT_PROMPT = "你好，介绍下你自己吧。请用中文回答。";
-
     private final ChatModel ollamaChatModel;
+    private final OllamaChatProperties chatProperties;
+    private final ChatModel chatModel;
 
-    public OllamaChatModelController(ChatModel chatModel) {
+    public OllamaChatModelController(ChatModel chatModel, OllamaChatProperties chatProperties) {
         this.ollamaChatModel = chatModel;
+		this.chatProperties = chatProperties;
+        this.chatModel = chatModel;
     }
 
     /**
@@ -52,7 +50,6 @@ public class OllamaChatModelController {
      */
     @GetMapping("/simple/chat")
     public String simpleChat() {
-
         return ollamaChatModel.call(new Prompt(DEFAULT_PROMPT)).getResult().getOutput().getText();
     }
 
@@ -71,21 +68,65 @@ public class OllamaChatModelController {
         return stream.map(resp -> resp.getResult().getOutput().getText());
     }
 
+    // ============ 新增功能与使用模式 ============ //
+
     /**
-     * 使用编程方式自定义 LLMs ChatOptions 参数， {@link OllamaOptions}。
-     * 优先级高于在 application.yml 中配置的 LLMs 参数！
+     * 带用户输入的 Prompt 调用
+     * 
+     * 示例：/model/chat?userPrompt=帮我写一首诗
      */
-    @GetMapping("/custom/chat")
-    public String customChat() {
-
-        OllamaOptions customOptions = OllamaOptions.builder()
-                .topP(0.7)
-                .model("llama3")
-                .temperature(0.8)
-                .build();
-
-//        return ollamaChatModel.call(new Prompt(DEFAULT_PROMPT, customOptions)).getResult().getOutput().getText();
-        return ollamaChatModel.call(new Prompt(DEFAULT_PROMPT)).getResult().getOutput().getText();
+    @GetMapping("/chat")
+    public String chatWithUserInput(String userPrompt) {
+        return ollamaChatModel.call(new Prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT))
+            .getResult()
+            .getOutput()
+            .getText();
     }
 
+    /**
+     * Server-Sent Events (SSE) 流式输出
+     * 
+     * 示例：/model/sse/chat?userPrompt=帮我写一首诗
+     */
+    @GetMapping(value = "/sse/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> sseStreamChat(String userPrompt) {
+        return ollamaChatModel.stream(new Prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT))
+            .map(resp -> resp.getResult().getOutput().getText());
+    }
+
+    /**
+     * 带系统提示词（System Prompt）和用户提示词（User Prompt）交互
+     */
+    @GetMapping("/with/system/prompt")
+    public String chatWithSystemPrompt(String userPromptmessage) {
+        String systemPrompt = chatProperties.getSystemPrompt();
+        if (systemPrompt == null || systemPrompt.isEmpty()) {
+            systemPrompt = "你是一个专业的助手，请用中文回答。";
+        }
+        String userPrompt = userPromptmessage != null ? userPromptmessage : chatProperties.getDefaultPrompt();
+        final UserMessage userMessage = new UserMessage(userPrompt);
+        final SystemMessage systemMessage = new SystemMessage(systemPrompt);
+        final Prompt prompt = new Prompt(List.of(systemMessage, userMessage));
+
+        return chatModel.call(prompt).getResult().getOutput().getText();
+    }
+
+    /**
+     * 设置单次调用的 Options 参数（覆盖默认值）
+     * 
+     * 示例：/model/custom/options?userPrompt=帮我写一首诗
+     */
+    @GetMapping("/custom/options")
+    public String customOptionsCall(String userPrompt) {
+        OllamaOptions options = OllamaOptions.builder()
+            .temperature(chatProperties.getTemperature())
+            .topP(chatProperties.getTopP())
+            .model(chatProperties.getModel())
+            .build();
+
+        return ollamaChatModel.call(new Prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT, options))
+            .getResult()
+            .getOutput()
+            .getText();
+    }
 }

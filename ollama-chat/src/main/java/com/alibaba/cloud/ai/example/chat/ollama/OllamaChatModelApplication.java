@@ -17,20 +17,19 @@
 
 package com.alibaba.cloud.ai.example.chat.ollama;
 
+import com.alibaba.cloud.ai.example.chat.ollama.config.OllamaChatProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
- * @author yuluo
- * @author <a href="mailto:yuluo08290126@gmail.com">yuluo</a>
+ * 主应用类，启动 Spring Boot 应用。
  */
-
 @SpringBootApplication
+@EnableConfigurationProperties(OllamaChatProperties.class)
 public class OllamaChatModelApplication {
 
-	public static void main(String[] args) {
-
-		SpringApplication.run(OllamaChatModelApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(OllamaChatModelApplication.class, args);
+    }
 }

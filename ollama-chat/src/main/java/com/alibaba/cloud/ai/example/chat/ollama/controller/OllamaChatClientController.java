@@ -1,23 +1,10 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.alibaba.cloud.ai.example.chat.ollama.controller;
 
+import com.alibaba.cloud.ai.example.chat.ollama.config.OllamaChatProperties;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import reactor.core.publisher.Flux;
 
 import org.springframework.ai.chat.client.ChatClient;
@@ -35,48 +22,97 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/client")
+@RequiredArgsConstructor
 public class OllamaChatClientController {
 
-	private static final String DEFAULT_PROMPT = "你好，介绍下你自己！请用中文回答。";
+	static final String DEFAULT_PROMPT = "你好，介绍下你自己！请用中文回答。";
 
-	private final ChatClient ollamaiChatClient;
+	private final ChatModel chatModel;
+	private final OllamaChatProperties chatProperties;
 
-	public OllamaChatClientController(ChatModel chatModel) {
+	private ChatClient ollamaiChatClient;
 
-		// 构造时，可以设置 ChatClient 的参数
-		// {@link org.springframework.ai.chat.client.ChatClient};
+	@PostConstruct
+	public void initChatClient() {
 		this.ollamaiChatClient = ChatClient.builder(chatModel)
-				// 实现 Logger 的 Advisor
-				.defaultAdvisors(
-						new SimpleLoggerAdvisor()
-				)
-				// 设置 ChatClient 中 ChatModel 的 Options 参数
-				.defaultOptions(
-						OllamaOptions.builder()
-								.topP(0.7)
-								.model("deepseek-r1:1.5b")
-								.build()
-				)
-				.build();
+			.defaultAdvisors(new SimpleLoggerAdvisor())
+			.defaultOptions(OllamaOptions.builder()
+				.topP(chatProperties.getTopP())
+				.model(chatProperties.getModel())
+				.build())
+			.build();
 	}
 
 	/**
-	 * ChatClient 简单调用
+	 * ChatClient 简单调用 - 使用默认 Prompt
 	 */
 	@GetMapping("/simple/chat")
 	public String simpleChat() {
-
 		return ollamaiChatClient.prompt(DEFAULT_PROMPT).call().content();
 	}
 
 	/**
-	 * ChatClient 流式调用
+	 * ChatClient 流式调用 - 返回 Flux<String>，适用于 Reactor 响应式编程
 	 */
 	@GetMapping("/stream/chat")
 	public Flux<String> streamChat(HttpServletResponse response) {
-
 		response.setCharacterEncoding("UTF-8");
 		return ollamaiChatClient.prompt(DEFAULT_PROMPT).stream().content();
+	}
+
+	// ============ 新增功能与使用模式 ============ //
+
+	/**
+	 * 带用户输入的 Prompt 调用
+	 * 
+	 * 示例：/client/chat?userPrompt=帮我写一首诗
+	 */
+	@GetMapping("/chat")
+	public String chatWithUserInput(String userPrompt) {
+		return ollamaiChatClient.prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT)
+				.call()
+				.content();
+	}
+
+	/**
+	 * Server-Sent Events (SSE) 流式输出
+	 * 
+	 * 示例：/client/sse/chat?userPrompt=帮我写一首诗
+	 */
+	@GetMapping(value = "/sse/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<String> sseStreamChat(String userPrompt) {
+		return ollamaiChatClient.prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT)
+				.stream()
+				.content();
+	}
+
+	/**
+	 * 带系统提示词（System Prompt）和用户提示词（User Prompt）交互
+	 * 
+	 * 示例：/client/with/system/prompt?userPrompt=帮我写一首诗
+	 */
+	@GetMapping("/with/system/prompt")
+	public String chatWithSystemPrompt(String userPrompt) {
+		return ollamaiChatClient
+			.prompt()
+			.system("你是一个专业的助手，请用中文回答。")
+			.user(userPrompt != null ? userPrompt : DEFAULT_PROMPT)
+			.call()
+			.content();
+	}
+
+	/**
+	 * 设置单次调用的 Options 参数（覆盖默认值）
+	 * 
+	 * 示例：/client/custom/options?userPrompt=帮我写一首诗
+	 */
+	@GetMapping("/custom/options")
+	public String customOptionsCall(String userPrompt) {
+		return ollamaiChatClient
+			.prompt(userPrompt != null ? userPrompt : DEFAULT_PROMPT)
+			.options(OllamaOptions.builder().temperature(0.9).topP(0.85).build())
+			.call()
+			.content();
 	}
 
 }

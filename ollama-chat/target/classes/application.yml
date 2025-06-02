@@ -10,3 +10,13 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:1.5b
+
+# Ollama Chat 配置
+ollama:
+  chat:
+    default-prompt: "你好，请介绍下你自己！请用中文回答。"
+    system-prompt: "你是一个高级软件开发工程师专家，请做一个自我介绍，要求介绍资历、项目经验、技术栈，你的特点及优势，请用中文回答。"
+    model: "deepseek-r1:1.5b"
+    top-p: 0.7
+    temperature: 0.7
+    max-tokens: 256

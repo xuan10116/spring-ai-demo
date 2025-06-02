@@ -1,13 +1,19 @@
 # Ollama Chat API
 
 ### Chat Client Simple Chat
-GET http://127.0.0.1:10005/client/simple/chat
+GET http://127.0.0.1:10005/client/chat?userPrompt=帮我写一首诗,内容你随意发挥
 
 ### Chat Client Stream Chat
 GET http://127.0.0.1:10005/client/stream/chat
 
+### Chat Client Stream Chat
+GET http://127.0.0.1:10005/client/with/system/prompt?userPrompt=如何学好数学
+
 ### Chat Model Stream Chat
 GET http://127.0.0.1:10005/model/stream/chat
+
+### Chat Model Stream Chat
+GET http://127.0.0.1:10005/model/with/system/prompt?userPrompt=如何学好数学
 
 ### Chat Model Stream Chat
 GET http://127.0.0.1:10005/model/simple/chat
